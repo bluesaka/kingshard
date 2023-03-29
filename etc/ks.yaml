@@ -1,34 +1,32 @@
 # server listen addr
-addr : 0.0.0.0:9696
+addr: 0.0.0.0:9696
 
 # prometheus server listen addr
-prometheus_addr : 0.0.0.0:7080
+prometheus_addr: 0.0.0.0:7080
 
 # server user and password
 user_list:
--
-    user :  root
-    password : root
--
-    user :  kingshard
-    password : kingshard
+  - user: root
+    password: root
+  - user: kingshard
+    password: kingshard
 
 # the web api server
-web_addr : 0.0.0.0:9797
+web_addr: 0.0.0.0:9797
 #HTTP Basic Auth
-web_user : admin
-web_password : admin
+web_user: admin
+web_password: admin
 
 # if set log_path, the sql log will write into log_path/sql.log,the system log
 # will write into log_path/sys.log
 #log_path : /Users/flike/log
 
 # log level[debug|info|warn|error],default error
-log_level : debug
+log_level: debug
 
 # if set log_sql(on|off) off,the sql log will not output
 log_sql: on
- 
+
 # only log the query that take more than slow_log_time ms
 #slow_log_time : 100
 
@@ -45,99 +43,51 @@ log_sql: on
 #proxy_charset: gbk
 
 # node is an agenda for real remote mysql server.
-nodes :
-- 
-    name : node1 
+nodes:
+  - name: node1
 
     # default max conns for mysql server
-    max_conns_limit : 32
+    max_conns_limit: 32
 
     # all mysql in a node must have the same user and password
-    user :  root 
-    password : root
+    user: root
+    password: 123456
 
-    # master represents a real mysql master server 
-    master : 127.0.0.1:3306
+    # master represents a real mysql master server
+    master: 127.0.0.1:3306
 
-    # slave represents a real mysql salve server,and the number after '@' is 
+    # slave represents a real mysql salve server,and the number after '@' is
     # read load weight of this slave.
     #slave : 192.168.59.101:3307@2,192.168.59.101:3307@3
-    down_after_noalive : 32
-- 
-    name : node2 
+    slave: 10.225.10.70:3306
 
-    # default max conns for mysql server
-    max_conns_limit : 32
-
-    # all mysql in a node must have the same user and password
-    user :  root 
-    password : root
-
-    # master represents a real mysql master server 
-    master : 127.0.0.1:3309
-
-    # slave represents a real mysql salve server 
-    slave : 
-
-    # down mysql after N seconds noalive
-    # 0 will no down
     down_after_noalive: 32
 
 # schema defines sharding rules, the db is the sharding table database.
-schema_list :
--
-    user: root
-    nodes: [node1,node2]
+schema_list:
+  - user: root
+    nodes: [ node1 ]
     default: node1
     shard:
-    -
+      -
 
--
-    user: kingshard
-    nodes: [node1,node2]
-    default: node1      
+  - user: kingshard
+    nodes: [ node1 ]
+    default: node1
     shard:
-    -   
-        db : kingshard
-        table: test_shard_hash
-        key: id
-        nodes: [node1, node2]
-        type: hash
-        locations: [4,4]
-
-    - 
-        db : hidb
+      - db: kingshard
         table: test_hash
         key: id
-        nodes: [node1, node2]
+        nodes: [ node1 ]
         type: hash
-        locations: [4,4]
-    -   
-        db : kingshard
-        table: test_shard_range
+        #4个子表
+        locations: [ 4 ]
+
+      - db: kingshard
+        table: test_range
         key: id
         type: range
-        nodes: [node1, node2]
-        locations: [4,4]
+        nodes: [ node1 ]
+        locations: [ 4 ]
+        #表示每个子表包含的最大记录数，即子表1对应的id为[0,10000),子表2[10000,20000)..
         table_row_limit: 10000
-    -
-        db : kingshard
-        table: test_shard_time
-        key: id
-        nodes: [node1, node2]
-        type: hash
-        locations: [2,2]
-    -
-        db : kingshard
-        table: test_shard_month
-        key: dtime
-        type: date_month
-        nodes: [node1,node2]
-        date_range: [201603-201605,201609-201612]
-    -
-        db : kingshard
-        table: test_shard_day
-        key: mtime
-        type: date_day
-        nodes: [node1,node2]
-        date_range: [20160306-20160307,20160308-20160309]
